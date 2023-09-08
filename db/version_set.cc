@@ -2764,7 +2764,7 @@ void VersionStorageInfo::ComputeCompactionScore(
               score);
         }
       } else {
-        int threshold = mutable_cf_options.level0_file_num_compaction_trigger / 2 + 
+        int threshold = mutable_cf_options.level0_file_num_compaction_trigger + 
           rand() % (mutable_cf_options.level0_file_num_compaction_trigger * 2);
         score = static_cast<double>(num_sorted_runs) / threshold;
         if (compaction_style_ == kCompactionStyleLevel && num_levels() > 1) {
