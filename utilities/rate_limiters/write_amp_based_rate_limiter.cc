@@ -28,7 +28,7 @@ struct WriteAmpBasedRateLimiter::Req {
 };
 
 namespace {
-constexpr int kSecondsPerTune = 5;
+constexpr int kSecondsPerTune = 10;
 constexpr int kMillisPerTune = 1000 * kSecondsPerTune;
 constexpr int kMicrosPerTune = 1000 * 1000 * kSecondsPerTune;
 
