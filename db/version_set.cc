@@ -2764,9 +2764,8 @@ void VersionStorageInfo::ComputeCompactionScore(
               score);
         }
       } else {
-        int threshold = mutable_cf_options.level0_file_num_compaction_trigger + 
-          rand() % (mutable_cf_options.level0_file_num_compaction_trigger * 2);
-        score = static_cast<double>(num_sorted_runs) / threshold;
+        score = static_cast<double>(num_sorted_runs) /
+                mutable_cf_options.level0_file_num_compaction_trigger;
         if (compaction_style_ == kCompactionStyleLevel && num_levels() > 1) {
           // Level-based involves L0->L0 compactions that can lead to oversized
           // L0 files. Take into account size as well to avoid later giant
