@@ -975,9 +975,9 @@ bool SomeFileOverlapsRangeWithLog(Logger* logger,
     const Slice& file_start = ExtractUserKey(file_level.files[index].smallest_key);
     const Slice& file_end = ExtractUserKey(file_level.files[index].largest_key);
     ROCKS_LOG_WARN(logger, "range overlap with level file. start: %s, end: %s, file_num: %ld, file_start: %s, file_end: %s",
-      smallest_user_key->ToString().c_str(), largest_user_key->ToString().c_str(),
-      file_level.files[index].fd.GetNumber(), file_start.ToString().c_str(),
-      file_end.ToString().c_str()
+      smallest_user_key->ToString(true).c_str(), largest_user_key->ToString(true).c_str(),
+      file_level.files[index].fd.GetNumber(), file_start.ToString(true).c_str(),
+      file_end.ToString(true).c_str()
     );
   }
   return overlap;
