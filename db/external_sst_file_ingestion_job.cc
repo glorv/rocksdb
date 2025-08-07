@@ -925,6 +925,10 @@ Status ExternalSstFileIngestionJob::AssignLevelAndSeqnoForIngestedFile(
         // the keys that we overlap with in this level, We also need to assign
         // this file a seqno to overwrite the existing keys in level `lvl`
         overlap_with_db = true;
+        ROCKS_LOG_WARN(db_options_.info_log,
+                         "Ingest file overlap with level %d, file: %s",
+                         lvl,
+                         file_to_ingest->internal_file_path.c_str());
         break;
       }
 
@@ -1110,6 +1114,10 @@ bool ExternalSstFileIngestionJob::IngestedFileFitInLevel(
                                &file_largest_user_key)) {
     // File overlap with another files in this level, we cannot
     // add it to this level
+    ROCKS_LOG_WARN(db_options_.info_log,
+                         "Ingest file overlap in level %d, file: %s",
+                         level,
+                         file_to_ingest->internal_file_path.c_str());
     return false;
   }
 
@@ -1117,6 +1125,10 @@ bool ExternalSstFileIngestionJob::IngestedFileFitInLevel(
                                        file_largest_user_key, level)) {
     // File overlap with a running compaction output that will be stored
     // in this level, we cannot add this file to this level
+    ROCKS_LOG_WARN(db_options_.info_log,
+                         "Ingest file overlap with compaction in level %d, file: %s",
+                         level,
+                         file_to_ingest->internal_file_path.c_str());
     return false;
   }
 
