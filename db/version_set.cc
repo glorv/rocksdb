@@ -980,7 +980,7 @@ bool SomeFileOverlapsRangeWithLog(Logger* logger,
       file_end.ToString().c_str()
     );
   }
-  return overlap
+  return overlap;
 }
 
 namespace {
