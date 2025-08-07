@@ -58,6 +58,7 @@
 #include "port/port.h"
 #include "rocksdb/env.h"
 #include "rocksdb/file_checksum.h"
+#include "rocksdb/options.h"
 #include "table/get_context.h"
 #include "table/multiget_context.h"
 #include "trace_replay/block_cache_tracer.h"
@@ -294,6 +295,9 @@ class VersionStorageInfo {
   // smallest_user_key==NULL represents a key smaller than all keys in the DB.
   // largest_user_key==NULL represents a key largest than all keys in the DB.
   bool OverlapInLevel(int level, const Slice* smallest_user_key,
+                      const Slice* largest_user_key);
+
+  bool OverlapInLevelWithLog(Logger* logger, int level, const Slice* smallest_user_key,
                       const Slice* largest_user_key);
 
   // Returns true iff the first or last file in inputs contains

@@ -1110,7 +1110,7 @@ bool ExternalSstFileIngestionJob::IngestedFileFitInLevel(
       file_to_ingest->smallest_internal_key.user_key());
   Slice file_largest_user_key(file_to_ingest->largest_internal_key.user_key());
 
-  if (vstorage->OverlapInLevel(level, &file_smallest_user_key,
+  if (vstorage->OverlapInLevelWithLog(db_options_.info_log.get(), level, &file_smallest_user_key,
                                &file_largest_user_key)) {
     // File overlap with another files in this level, we cannot
     // add it to this level

@@ -58,6 +58,7 @@
 #include "options/options_helper.h"
 #include "rocksdb/env.h"
 #include "rocksdb/merge_operator.h"
+#include "rocksdb/options.h"
 #include "rocksdb/write_buffer_manager.h"
 #include "table/format.h"
 #include "table/get_context.h"
@@ -932,6 +933,54 @@ bool SomeFileOverlapsRange(const InternalKeyComparator& icmp,
   }
 
   return !BeforeFile(ucmp, largest_user_key, &file_level.files[index]);
+}
+
+bool SomeFileOverlapsRangeWithLog(Logger* logger,
+                            const InternalKeyComparator& icmp,
+                           bool disjoint_sorted_files,
+                           const LevelFilesBrief& file_level,
+                           const Slice* smallest_user_key,
+                           const Slice* largest_user_key) {
+  const Comparator* ucmp = icmp.user_comparator();
+  if (!disjoint_sorted_files) {
+    // Need to check against all files
+    for (size_t i = 0; i < file_level.num_files; i++) {
+      const FdWithKeyRange* f = &(file_level.files[i]);
+      if (AfterFile(ucmp, smallest_user_key, f) ||
+          BeforeFile(ucmp, largest_user_key, f)) {
+        // No overlap
+      } else {
+        return true;  // Overlap
+      }
+    }
+    return false;
+  }
+
+  // Binary search over file list
+  uint32_t index = 0;
+  if (smallest_user_key != nullptr) {
+    // Find the leftmost possible internal key for smallest_user_key
+    InternalKey small;
+    small.SetMinPossibleForUserKey(*smallest_user_key);
+    index = FindFile(icmp, file_level, small.Encode());
+  }
+
+  if (index >= file_level.num_files) {
+    // beginning of range is after all files, so no overlap.
+    return false;
+  }
+
+  const bool overlap = !BeforeFile(ucmp, largest_user_key, &file_level.files[index]);
+  if (overlap) {
+    const Slice& file_start = ExtractUserKey(file_level.files[index].smallest_key);
+    const Slice& file_end = ExtractUserKey(file_level.files[index].largest_key);
+    ROCKS_LOG_WARN(logger, "range overlap with level file. start: %s, end: %s, file_num: %ld, file_start: %s, file_end: %s",
+      smallest_user_key->ToString().c_str(), largest_user_key->ToString().c_str(),
+      file_level.files[index].fd.GetNumber(), file_start.ToString().c_str(),
+      file_end.ToString().c_str()
+    );
+  }
+  return overlap
 }
 
 namespace {
@@ -4271,6 +4320,19 @@ bool VersionStorageInfo::OverlapInLevel(int level,
     return false;
   }
   return SomeFileOverlapsRange(*internal_comparator_, (level > 0),
+                               level_files_brief_[level], smallest_user_key,
+                               largest_user_key);
+}
+
+bool VersionStorageInfo::OverlapInLevelWithLog(Logger* logger,
+                                        int level,
+                                        const Slice* smallest_user_key,
+                                        const Slice* largest_user_key) {
+  if (level >= num_non_empty_levels_) {
+    // empty level, no overlap
+    return false;
+  }
+  return SomeFileOverlapsRangeWithLog(logger, *internal_comparator_, (level > 0),
                                level_files_brief_[level], smallest_user_key,
                                largest_user_key);
 }
